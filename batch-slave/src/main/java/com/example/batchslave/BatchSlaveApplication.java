@@ -61,10 +61,10 @@ public class BatchSlaveApplication {
 			inputChannel= "inPersonSaveQueue",
 			outputChannel = "outPersonSaveQueue",
 			poller = @Poller(fixedRate = "5"))
-	public ChunkHandler<Object> stepSavePersonProcessor(
+	public ChunkHandler<String> stepSavePersonProcessor(
 			SavePersonProcessor savePersonProcessor,
 			SavePersonWriter savePersonWriter) {
-		ChunkProcessorChunkHandler<Object> processor = new ChunkProcessorChunkHandler<>();
+		ChunkProcessorChunkHandler<String> processor = new ChunkProcessorChunkHandler<>();
 		processor.setChunkProcessor(new SimpleChunkProcessor<>(savePersonProcessor, savePersonWriter));
 		return processor;
 	}

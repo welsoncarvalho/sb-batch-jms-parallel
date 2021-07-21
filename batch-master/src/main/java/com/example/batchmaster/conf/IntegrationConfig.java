@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
+import org.springframework.integration.jms.JmsMessageDrivenEndpoint;
 import org.springframework.integration.jms.dsl.Jms;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -49,13 +50,13 @@ public class IntegrationConfig {
                 .get();
     }
 
-//    @Bean
-//    public JmsMessageDrivenEndpoint savePersonReplyAdapter(
-//                    ConnectionFactory connectionFactory,
-//                    MessageChannel savePersonReplyChannel) {
-//        return Jms.messageDrivenChannelAdapter(connectionFactory)
-//                .destination(personSaveQueueReply)
-//                .outputChannel(savePersonReplyChannel)
-//                .get();
-//    }
+    @Bean
+    public JmsMessageDrivenEndpoint savePersonReplyAdapter(
+                    ConnectionFactory connectionFactory,
+                    MessageChannel savePersonReplyChannel) {
+        return Jms.messageDrivenChannelAdapter(connectionFactory)
+                .destination(personSaveQueueReply)
+                .outputChannel(savePersonReplyChannel)
+                .get();
+    }
 }
