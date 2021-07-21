@@ -14,8 +14,56 @@ services:
     ports:
       - "8161:8161"
       - "61616:61616"
-#    networks:
-#      - batch
+    networks:
+      - batch
+
+  slave_one:
+    build:
+      context: ./batch-slave
+      dockerfile: Dockerfile
+      args:
+        DATASOURCE_URL: jdbc:mysql://mysql:3306/batch
+        DATASOURCE_USER: u_batch
+        DATASOURCE_PASS: p_batch
+        ARTEMIS_HOST: artemis
+        ARTEMIS_PORT: 61616
+        ARTEMIS_USER: u_batch
+        ARTEMIS_PASS: p_batch
+    container_name: slave_one
+    networks:
+      - batch
+
+  slave_two:
+    build:
+      context: ./batch-slave
+      dockerfile: Dockerfile
+      args:
+        DATASOURCE_URL: jdbc:mysql://mysql:3306/batch
+        DATASOURCE_USER: u_batch
+        DATASOURCE_PASS: p_batch
+        ARTEMIS_HOST: artemis
+        ARTEMIS_PORT: 61616
+        ARTEMIS_USER: u_batch
+        ARTEMIS_PASS: p_batch
+    container_name: slave_two
+    networks:
+      - batch
+
+  master:
+    build:
+      context: ./batch-master
+      dockerfile: Dockerfile
+      args:
+        DATASOURCE_URL: jdbc:mysql://mysql:3306/batch
+        DATASOURCE_USER: u_batch
+        DATASOURCE_PASS: p_batch
+        ARTEMIS_HOST: artemis
+        ARTEMIS_PORT: 61616
+        ARTEMIS_USER: u_batch
+        ARTEMIS_PASS: p_batch
+    container_name: master
+    networks:
+      - batch
 
 networks:
   batch:
