@@ -17,7 +17,6 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -27,8 +26,6 @@ import org.springframework.messaging.PollableChannel;
 @Configuration
 @AllArgsConstructor
 public class PersonJob {
-
-    private final ApplicationContext applicationContext;
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
@@ -69,12 +66,12 @@ public class PersonJob {
     @Bean
     @StepScope
     public ChunkMessageChannelItemWriter<ChunkResponse> savePersonWriter(
-            MessagingTemplate messagingTemplate,
-            PollableChannel pollableChannel) {
+            MessagingTemplate savePersonTemplate,
+            PollableChannel savePersonReplyChannel) {
 
         ChunkMessageChannelItemWriter<ChunkResponse> writer = new ChunkMessageChannelItemWriter<>();
-        writer.setMessagingOperations(messagingTemplate);
-        writer.setReplyChannel(pollableChannel);
+        writer.setMessagingOperations(savePersonTemplate);
+        writer.setReplyChannel(savePersonReplyChannel);
 
         return writer;
     }
