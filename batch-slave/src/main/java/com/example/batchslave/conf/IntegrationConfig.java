@@ -8,13 +8,12 @@ import org.springframework.batch.integration.chunk.ChunkProcessorChunkHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.integration.jms.dsl.Jms;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.PollableChannel;
 
 import javax.jms.ConnectionFactory;
 
@@ -29,30 +28,34 @@ public class IntegrationConfig {
 
     @Bean
     public MessageChannel outPersonSaveQueue(ConnectionFactory connectionFactory) {
-        return new DirectChannel();
+        return MessageChannels.direct().get();
     }
 
     @Bean
-    @ServiceActivator(inputChannel = "outPersonSaveQueue")
-    public MessageHandler outPersonSaveQueueAdapter(ConnectionFactory connectionFactory) {
-        return Jms.outboundAdapter(connectionFactory)
-                .destination(personSaveQueueReply)
+    public IntegrationFlow outboundFlow(ConnectionFactory connectionFactory, MessageChannel outPersonSaveQueue) {
+        return IntegrationFlows
+                .from(outPersonSaveQueue)
+                .handle(Jms.outboundAdapter(connectionFactory).destination(personSaveQueueReply))
                 .get();
     }
 
     @Bean
-    public PollableChannel inPersonSaveQueue(ConnectionFactory connectionFactory) {
-        return Jms
-                .pollableChannel(connectionFactory)
-                .destination(personSaveQueue)
+    public MessageChannel inPersonSaveQueue(ConnectionFactory connectionFactory) {
+        return MessageChannels.direct().get();
+    }
+
+    @Bean
+    public IntegrationFlow inboundFlow(ConnectionFactory connectionFactory, MessageChannel inPersonSaveQueue) {
+        return IntegrationFlows
+                .from(Jms.messageDrivenChannelAdapter(connectionFactory).destination(personSaveQueue))
+                .channel(inPersonSaveQueue)
                 .get();
     }
 
     @Bean
     @ServiceActivator(
             inputChannel= "inPersonSaveQueue",
-            outputChannel = "outPersonSaveQueue",
-            poller = @Poller(fixedRate = "5"))
+            outputChannel = "outPersonSaveQueue")
     public ChunkHandler<String> stepSavePersonProcessor(
             SavePersonProcessor savePersonProcessor,
             SavePersonWriter savePersonWriter) {

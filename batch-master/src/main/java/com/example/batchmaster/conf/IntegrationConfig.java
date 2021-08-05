@@ -3,13 +3,12 @@ package com.example.batchmaster.conf;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
-import org.springframework.integration.jms.JmsMessageDrivenEndpoint;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.integration.jms.dsl.Jms;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHandler;
 
 import javax.jms.ConnectionFactory;
 
@@ -32,31 +31,29 @@ public class IntegrationConfig {
 
     @Bean
     public MessageChannel savePersonChannel() {
-        return new DirectChannel();
+        return MessageChannels.direct().get();
     }
 
     @Bean
-    @ServiceActivator(inputChannel = "savePersonChannel")
-    public MessageHandler savePersonAdapter(ConnectionFactory connectionFactory) {
-        return Jms.outboundAdapter(connectionFactory)
-                .destination(personSaveQueue)
+    public IntegrationFlow savePersonFlow(ConnectionFactory connectionFactory,
+                                          MessageChannel savePersonChannel) {
+        return IntegrationFlows
+                .from(savePersonChannel)
+                .handle(Jms.outboundAdapter(connectionFactory).destination(personSaveQueue))
                 .get();
     }
 
     @Bean
-    public MessageChannel savePersonReplyChannel(ConnectionFactory connectionFactory) {
-        return Jms.pollableChannel(connectionFactory)
-                .destination(personSaveQueueReply)
-                .get();
+    public MessageChannel savePersonReplyChannel() {
+        return MessageChannels.queue().get();
     }
 
     @Bean
-    public JmsMessageDrivenEndpoint savePersonReplyAdapter(
-                    ConnectionFactory connectionFactory,
-                    MessageChannel savePersonReplyChannel) {
-        return Jms.messageDrivenChannelAdapter(connectionFactory)
-                .destination(personSaveQueueReply)
-                .outputChannel(savePersonReplyChannel)
+    public IntegrationFlow savePersonReplyFlow(ConnectionFactory connectionFactory,
+                                               MessageChannel savePersonReplyChannel) {
+        return IntegrationFlows
+                .from(Jms.messageDrivenChannelAdapter(connectionFactory).destination(personSaveQueueReply))
+                .channel(savePersonReplyChannel)
                 .get();
     }
 }
