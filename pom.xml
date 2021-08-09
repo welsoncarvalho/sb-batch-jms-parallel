@@ -11,6 +11,7 @@
     <modules>
         <module>batch-master</module>
         <module>batch-slave</module>
+        <module>batch-test</module>
     </modules>
 
 </project>

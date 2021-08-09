@@ -21,7 +21,7 @@ import javax.jms.ConnectionFactory;
 @Configuration
 @EnableIntegration
 @EnableBatchIntegration
-public class IntegrationConfig {
+public class SlaveConfig {
 
     @Value("${person.save.queue}")
     private String personSaveQueue;
