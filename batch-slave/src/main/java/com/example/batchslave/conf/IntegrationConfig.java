@@ -1,14 +1,15 @@
 package com.example.batchslave.conf;
 
+import com.example.batchslave.model.Person;
 import com.example.batchslave.step.SavePersonProcessor;
 import com.example.batchslave.step.SavePersonWriter;
-import org.springframework.batch.core.step.item.SimpleChunkProcessor;
-import org.springframework.batch.integration.chunk.ChunkHandler;
-import org.springframework.batch.integration.chunk.ChunkProcessorChunkHandler;
+import org.springframework.batch.integration.chunk.RemoteChunkingWorkerBuilder;
+import org.springframework.batch.integration.config.annotation.EnableBatchIntegration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.MessageChannels;
@@ -18,6 +19,8 @@ import org.springframework.messaging.MessageChannel;
 import javax.jms.ConnectionFactory;
 
 @Configuration
+@EnableIntegration
+@EnableBatchIntegration
 public class IntegrationConfig {
 
     @Value("${person.save.queue}")
@@ -25,6 +28,9 @@ public class IntegrationConfig {
     
     @Value("${person.save.queue.reply}")
     private String personSaveQueueReply;
+
+    @Autowired
+    private RemoteChunkingWorkerBuilder<String, Person> remoteChunkingWorkerBuilder;
 
     @Bean
     public MessageChannel outPersonSaveQueue(ConnectionFactory connectionFactory) {
@@ -53,14 +59,15 @@ public class IntegrationConfig {
     }
 
     @Bean
-    @ServiceActivator(
-            inputChannel= "inPersonSaveQueue",
-            outputChannel = "outPersonSaveQueue")
-    public ChunkHandler<String> stepSavePersonProcessor(
-            SavePersonProcessor savePersonProcessor,
-            SavePersonWriter savePersonWriter) {
-        ChunkProcessorChunkHandler<String> processor = new ChunkProcessorChunkHandler<>();
-        processor.setChunkProcessor(new SimpleChunkProcessor<>(savePersonProcessor, savePersonWriter));
-        return processor;
+    public IntegrationFlow workerIntegrationFlow(SavePersonProcessor savePersonProcessor,
+                                                 SavePersonWriter savePersonWriter,
+                                                 MessageChannel inPersonSaveQueue,
+                                                 MessageChannel outPersonSaveQueue) {
+        return this.remoteChunkingWorkerBuilder
+                .itemProcessor(savePersonProcessor)
+                .itemWriter(savePersonWriter)
+                .inputChannel(inPersonSaveQueue)
+                .outputChannel(outPersonSaveQueue)
+                .build();
     }
 }
