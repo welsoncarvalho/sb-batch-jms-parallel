@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.EnableIntegration;
-import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.MessageChannels;
@@ -25,14 +24,6 @@ public class IntegrationConfig {
 
     @Value("${person.save.queue.reply}")
     private String personSaveQueueReply;
-
-    @Bean
-    public MessagingTemplate savePersonTemplate(MessageChannel savePersonChannel) {
-        MessagingTemplate savePersonTemplate = new MessagingTemplate();
-        savePersonTemplate.setDefaultChannel(savePersonChannel);
-        savePersonTemplate.setReceiveTimeout(2000L);
-        return savePersonTemplate;
-    }
 
     @Bean
     public MessageChannel savePersonChannel() {
